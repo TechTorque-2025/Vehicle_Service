@@ -1,4 +1,5 @@
 # 🚗 Vehicle Management Service
+ [![Build and Test Vehicle Service](https://github.com/TechTorque-2025/Vehicle_Service/actions/workflows/buildtest.yaml/badge.svg)](https://github.com/TechTorque-2025/Vehicle_Service/actions/workflows/buildtest.yaml)
 
 This microservice is responsible for managing all vehicle-related information for customers.
 
