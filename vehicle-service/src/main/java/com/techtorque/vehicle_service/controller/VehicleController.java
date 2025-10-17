@@ -1,101 +1,189 @@
 package com.techtorque.vehicle_service.controller;
 
+import com.techtorque.vehicle_service.dto.*;
+import com.techtorque.vehicle_service.entity.Vehicle;
+import com.techtorque.vehicle_service.mapper.VehicleMapper;
+import com.techtorque.vehicle_service.service.PhotoStorageService;
+import com.techtorque.vehicle_service.service.ServiceHistoryService;
+import com.techtorque.vehicle_service.service.VehicleService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-// Assuming you will create these DTOs later
-// import com.techtorque.vehicle_service.dto.VehicleRequestDto;
-// import com.techtorque.vehicle_service.dto.VehicleUpdateDto;
+import java.util.List;
 
 @RestController
-@RequestMapping("/vehicles") // The gateway routes /api/v1/vehicles to this controller
+@RequestMapping("/vehicles")
 @Tag(name = "Vehicle Management", description = "Endpoints for customers to manage their vehicles.")
-@SecurityRequirement(name = "bearerAuth") // Indicates all endpoints here require JWT auth
+@SecurityRequirement(name = "bearerAuth")
 public class VehicleController {
 
-  // @Autowired
-  // private VehicleService vehicleService;
+  private final VehicleService vehicleService;
+  private final PhotoStorageService photoStorageService;
+  private final ServiceHistoryService serviceHistoryService;
+
+  public VehicleController(
+          VehicleService vehicleService,
+          PhotoStorageService photoStorageService,
+          ServiceHistoryService serviceHistoryService) {
+    this.vehicleService = vehicleService;
+    this.photoStorageService = photoStorageService;
+    this.serviceHistoryService = serviceHistoryService;
+  }
 
   @Operation(summary = "Register a new vehicle for the current customer")
+  @ApiResponses(value = {
+          @ApiResponse(responseCode = "201", description = "Vehicle successfully registered",
+                  content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+          @ApiResponse(responseCode = "400", description = "Invalid input data"),
+          @ApiResponse(responseCode = "409", description = "Vehicle with this VIN already exists")
+  })
   @PostMapping
   @PreAuthorize("hasRole('CUSTOMER')")
-  public ResponseEntity<?> registerNewVehicle(
-          // @RequestBody VehicleRequestDto vehicleRequest,
+  public ResponseEntity<ApiResponseDto> registerNewVehicle(
+          @Valid @RequestBody VehicleRequestDto vehicleRequest,
           @RequestHeader("X-User-Subject") String customerId) {
 
-    // TODO: Delegate to VehicleService to create and save the new vehicle for the customer
-    return ResponseEntity.ok().body("{\"message\": \"Vehicle added\"}");
+    Vehicle savedVehicle = vehicleService.registerVehicle(vehicleRequest, customerId);
+
+    ApiResponseDto response = ApiResponseDto.builder()
+            .message("Vehicle added")
+            .vehicleId(savedVehicle.getId())
+            .build();
+
+    return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
 
   @Operation(summary = "List all vehicles for the current customer")
+  @ApiResponses(value = {
+          @ApiResponse(responseCode = "200", description = "Successfully retrieved vehicle list",
+                  content = @Content(schema = @Schema(implementation = VehicleListResponseDto.class)))
+  })
   @GetMapping
   @PreAuthorize("hasRole('CUSTOMER')")
-  public ResponseEntity<?> listCustomerVehicles(
+  public ResponseEntity<List<VehicleListResponseDto>> listCustomerVehicles(
           @RequestHeader("X-User-Subject") String customerId) {
 
-    // TODO: Delegate to VehicleService to find all vehicles by customerId
-    return ResponseEntity.ok().build();
+    List<Vehicle> vehicles = vehicleService.getVehiclesForCustomer(customerId);
+    List<VehicleListResponseDto> response = VehicleMapper.toListResponseDtos(vehicles);
+
+    return ResponseEntity.ok(response);
   }
 
   @Operation(summary = "Get details for a specific vehicle")
+  @ApiResponses(value = {
+          @ApiResponse(responseCode = "200", description = "Successfully retrieved vehicle details",
+                  content = @Content(schema = @Schema(implementation = VehicleResponseDto.class))),
+          @ApiResponse(responseCode = "404", description = "Vehicle not found"),
+          @ApiResponse(responseCode = "403", description = "Not authorized to access this vehicle")
+  })
   @GetMapping("/{vehicleId}")
   @PreAuthorize("hasRole('CUSTOMER')")
-  public ResponseEntity<?> getVehicleDetails(
+  public ResponseEntity<VehicleResponseDto> getVehicleDetails(
           @PathVariable String vehicleId,
           @RequestHeader("X-User-Subject") String customerId) {
 
-    // TODO: Delegate to VehicleService, which MUST verify this vehicle belongs to the customer
-    return ResponseEntity.ok().build();
+    Vehicle vehicle = vehicleService.getVehicleByIdAndCustomer(vehicleId, customerId)
+            .orElseThrow(() -> new com.techtorque.vehicle_service.exception.VehicleNotFoundException(vehicleId, customerId));
+
+    VehicleResponseDto response = VehicleMapper.toResponseDto(vehicle);
+
+    return ResponseEntity.ok(response);
   }
 
   @Operation(summary = "Update information for a specific vehicle")
+  @ApiResponses(value = {
+          @ApiResponse(responseCode = "200", description = "Vehicle successfully updated",
+                  content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+          @ApiResponse(responseCode = "404", description = "Vehicle not found"),
+          @ApiResponse(responseCode = "403", description = "Not authorized to update this vehicle")
+  })
   @PutMapping("/{vehicleId}")
   @PreAuthorize("hasRole('CUSTOMER')")
-  public ResponseEntity<?> updateVehicleInfo(
+  public ResponseEntity<ApiResponseDto> updateVehicleInfo(
           @PathVariable String vehicleId,
-          // @RequestBody VehicleUpdateDto vehicleUpdate,
+          @Valid @RequestBody VehicleUpdateDto vehicleUpdate,
           @RequestHeader("X-User-Subject") String customerId) {
 
-    // TODO: Delegate to VehicleService, which MUST verify ownership before updating
-    return ResponseEntity.ok().body("{\"message\": \"Vehicle updated\"}");
+    vehicleService.updateVehicle(vehicleId, vehicleUpdate, customerId);
+
+    ApiResponseDto response = ApiResponseDto.builder()
+            .message("Vehicle updated")
+            .vehicleId(vehicleId)
+            .build();
+
+    return ResponseEntity.ok(response);
   }
 
   @Operation(summary = "Remove a vehicle for the current customer")
+  @ApiResponses(value = {
+          @ApiResponse(responseCode = "200", description = "Vehicle successfully removed",
+                  content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+          @ApiResponse(responseCode = "404", description = "Vehicle not found"),
+          @ApiResponse(responseCode = "403", description = "Not authorized to delete this vehicle")
+  })
   @DeleteMapping("/{vehicleId}")
   @PreAuthorize("hasRole('CUSTOMER')")
-  public ResponseEntity<?> removeVehicle(
+  public ResponseEntity<ApiResponseDto> removeVehicle(
           @PathVariable String vehicleId,
           @RequestHeader("X-User-Subject") String customerId) {
 
-    // TODO: Delegate to VehicleService, which MUST verify ownership before deleting
-    return ResponseEntity.ok().body("{\"message\": \"Vehicle removed\"}");
+    vehicleService.deleteVehicle(vehicleId, customerId);
+
+    // Also delete associated photos
+    photoStorageService.deleteVehiclePhotos(vehicleId);
+
+    ApiResponseDto response = ApiResponseDto.builder()
+            .message("Vehicle removed")
+            .vehicleId(vehicleId)
+            .build();
+
+    return ResponseEntity.ok(response);
   }
 
   @Operation(summary = "Upload photos for a vehicle")
+  @ApiResponses(value = {
+          @ApiResponse(responseCode = "200", description = "Photos successfully uploaded",
+                  content = @Content(schema = @Schema(implementation = PhotoUploadResponseDto.class))),
+          @ApiResponse(responseCode = "404", description = "Vehicle not found"),
+          @ApiResponse(responseCode = "400", description = "Invalid file format")
+  })
   @PostMapping("/{vehicleId}/photos")
   @PreAuthorize("hasRole('CUSTOMER')")
-  public ResponseEntity<?> uploadVehiclePhotos(
+  public ResponseEntity<PhotoUploadResponseDto> uploadVehiclePhotos(
           @PathVariable String vehicleId,
           @RequestParam("files") MultipartFile[] files,
           @RequestHeader("X-User-Subject") String customerId) {
 
-    // TODO: Delegate to a service that handles file uploads and associates photos with the vehicle
-    return ResponseEntity.ok().build();
+    PhotoUploadResponseDto response = photoStorageService.uploadVehiclePhotos(vehicleId, files, customerId);
+
+    return ResponseEntity.ok(response);
   }
 
   @Operation(summary = "Get service history for a specific vehicle")
+  @ApiResponses(value = {
+          @ApiResponse(responseCode = "200", description = "Successfully retrieved service history",
+                  content = @Content(schema = @Schema(implementation = ServiceHistoryDto.class))),
+          @ApiResponse(responseCode = "404", description = "Vehicle not found")
+  })
   @GetMapping("/{vehicleId}/history")
   @PreAuthorize("hasRole('CUSTOMER')")
-  public ResponseEntity<?> getServiceHistory(
+  public ResponseEntity<List<ServiceHistoryDto>> getServiceHistory(
           @PathVariable String vehicleId,
           @RequestHeader("X-User-Subject") String customerId) {
 
-    // TODO: This might require an inter-service call to the Project/Service Management service
-    return ResponseEntity.ok().build();
+    List<ServiceHistoryDto> history = serviceHistoryService.getServiceHistory(vehicleId, customerId);
+
+    return ResponseEntity.ok(history);
   }
 }
