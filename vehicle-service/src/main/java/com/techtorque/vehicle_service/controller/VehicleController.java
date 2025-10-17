@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -26,6 +27,7 @@ import java.util.List;
 @RequestMapping("/vehicles")
 @Tag(name = "Vehicle Management", description = "Endpoints for customers to manage their vehicles.")
 @SecurityRequirement(name = "bearerAuth")
+@Slf4j
 public class VehicleController {
 
   private final VehicleService vehicleService;
@@ -74,10 +76,18 @@ public class VehicleController {
   public ResponseEntity<List<VehicleListResponseDto>> listCustomerVehicles(
           @RequestHeader("X-User-Subject") String customerId) {
 
-    List<Vehicle> vehicles = vehicleService.getVehiclesForCustomer(customerId);
-    List<VehicleListResponseDto> response = VehicleMapper.toListResponseDtos(vehicles);
+    log.info("Listing vehicles for customer: {}", customerId);
 
-    return ResponseEntity.ok(response);
+    try {
+      List<Vehicle> vehicles = vehicleService.getVehiclesForCustomer(customerId);
+      List<VehicleListResponseDto> response = VehicleMapper.toListResponseDtos(vehicles);
+
+      log.info("Successfully retrieved {} vehicles for customer: {}", vehicles.size(), customerId);
+      return ResponseEntity.ok(response);
+    } catch (Exception e) {
+      log.error("Error listing vehicles for customer: {}", customerId, e);
+      throw e;
+    }
   }
 
   @Operation(summary = "Get details for a specific vehicle")
