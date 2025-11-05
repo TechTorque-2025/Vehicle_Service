@@ -38,4 +38,12 @@ public interface VehicleRepository extends JpaRepository<Vehicle, String> {
    */
   Optional<Vehicle> findByIdAndCustomerId(String id, String customerId);
 
+  /**
+   * Counts the number of vehicles associated with a specific customer ID.
+   *
+   * @param customerId The UUID of the customer.
+   * @return The count of vehicles belonging to the customer.
+   */
+  long countByCustomerId(String customerId);
+
 }
