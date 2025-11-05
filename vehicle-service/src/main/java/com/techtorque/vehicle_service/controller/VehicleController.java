@@ -196,4 +196,76 @@ public class VehicleController {
 
     return ResponseEntity.ok(history);
   }
+
+  @Operation(summary = "Get all photos for a vehicle")
+  @ApiResponses(value = {
+          @ApiResponse(responseCode = "200", description = "Successfully retrieved photo list"),
+          @ApiResponse(responseCode = "404", description = "Vehicle not found")
+  })
+  @GetMapping("/{vehicleId}/photos")
+  @PreAuthorize("hasRole('CUSTOMER')")
+  public ResponseEntity<List<com.techtorque.vehicle_service.entity.VehiclePhoto>> getVehiclePhotoList(
+          @PathVariable String vehicleId,
+          @RequestHeader("X-User-Subject") String customerId) {
+
+    List<com.techtorque.vehicle_service.entity.VehiclePhoto> photos = 
+            photoStorageService.getVehiclePhotos(vehicleId, customerId);
+
+    return ResponseEntity.ok(photos);
+  }
+
+  @Operation(summary = "Get a specific photo file")
+  @ApiResponses(value = {
+          @ApiResponse(responseCode = "200", description = "Successfully retrieved photo file"),
+          @ApiResponse(responseCode = "404", description = "Photo not found")
+  })
+  @GetMapping("/{vehicleId}/photos/{fileName}")
+  @PreAuthorize("hasRole('CUSTOMER')")
+  public ResponseEntity<org.springframework.core.io.Resource> getPhotoFile(
+          @PathVariable String vehicleId,
+          @PathVariable String fileName,
+          @RequestHeader("X-User-Subject") String customerId) {
+
+    org.springframework.core.io.Resource resource = 
+            photoStorageService.loadPhotoAsResource(vehicleId, fileName, customerId);
+
+    // Determine content type
+    String contentType = "image/jpeg"; // default
+    try {
+      contentType = java.nio.file.Files.probeContentType(
+              java.nio.file.Paths.get(resource.getFile().getAbsolutePath()));
+      if (contentType == null) {
+        contentType = "image/jpeg";
+      }
+    } catch (Exception e) {
+      log.warn("Could not determine file type for: {}", fileName);
+    }
+
+    return ResponseEntity.ok()
+            .contentType(org.springframework.http.MediaType.parseMediaType(contentType))
+            .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, 
+                    "inline; filename=\"" + resource.getFilename() + "\"")
+            .body(resource);
+  }
+
+  @Operation(summary = "Delete a specific photo")
+  @ApiResponses(value = {
+          @ApiResponse(responseCode = "200", description = "Photo successfully deleted",
+                  content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+          @ApiResponse(responseCode = "404", description = "Photo not found")
+  })
+  @DeleteMapping("/photos/{photoId}")
+  @PreAuthorize("hasRole('CUSTOMER')")
+  public ResponseEntity<ApiResponseDto> deleteSinglePhoto(
+          @PathVariable String photoId,
+          @RequestHeader("X-User-Subject") String customerId) {
+
+    photoStorageService.deleteSinglePhoto(photoId, customerId);
+
+    ApiResponseDto response = ApiResponseDto.builder()
+            .message("Photo deleted successfully")
+            .build();
+
+    return ResponseEntity.ok(response);
+  }
 }
