@@ -1,20 +1,23 @@
 package com.techtorque.vehicle_service.service.impl;
 
 import com.techtorque.vehicle_service.dto.PhotoUploadResponseDto;
-import com.techtorque.vehicle_service.entity.Vehicle;
 import com.techtorque.vehicle_service.entity.VehiclePhoto;
 import com.techtorque.vehicle_service.exception.PhotoUploadException;
+import com.techtorque.vehicle_service.exception.UnauthorizedVehicleAccessException;
 import com.techtorque.vehicle_service.exception.VehicleNotFoundException;
 import com.techtorque.vehicle_service.repository.VehiclePhotoRepository;
 import com.techtorque.vehicle_service.repository.VehicleRepository;
 import com.techtorque.vehicle_service.service.PhotoStorageService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -54,7 +57,7 @@ public class PhotoStorageServiceImpl implements PhotoStorageService {
         log.info("Uploading {} photos for vehicle: {}", files.length, vehicleId);
 
         // Verify vehicle exists and belongs to customer
-        Vehicle vehicle = vehicleRepository.findByIdAndCustomerId(vehicleId, customerId)
+        vehicleRepository.findByIdAndCustomerId(vehicleId, customerId)
                 .orElseThrow(() -> new VehicleNotFoundException(vehicleId, customerId));
 
         List<String> photoIds = new ArrayList<>();
@@ -114,6 +117,87 @@ public class PhotoStorageServiceImpl implements PhotoStorageService {
                 .photoIds(photoIds)
                 .urls(photoUrls)
                 .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<VehiclePhoto> getVehiclePhotos(String vehicleId, String customerId) {
+        log.info("Fetching photos for vehicle: {}", vehicleId);
+
+        // Verify vehicle exists and belongs to customer
+        vehicleRepository.findByIdAndCustomerId(vehicleId, customerId)
+                .orElseThrow(() -> new VehicleNotFoundException(vehicleId, customerId));
+
+        return photoRepository.findByVehicleId(vehicleId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public VehiclePhoto getPhotoById(String photoId, String customerId) {
+        log.info("Fetching photo with ID: {}", photoId);
+
+        VehiclePhoto photo = photoRepository.findById(photoId)
+                .orElseThrow(() -> new PhotoUploadException("Photo not found with ID: " + photoId));
+
+        // Verify ownership
+        vehicleRepository.findByIdAndCustomerId(photo.getVehicleId(), customerId)
+                .orElseThrow(() -> new UnauthorizedVehicleAccessException(photo.getVehicleId(), customerId));
+
+        return photo;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Resource loadPhotoAsResource(String vehicleId, String fileName, String customerId) {
+        log.info("Loading photo file: {} for vehicle: {}", fileName, vehicleId);
+
+        // Verify vehicle exists and belongs to customer
+        vehicleRepository.findByIdAndCustomerId(vehicleId, customerId)
+                .orElseThrow(() -> new VehicleNotFoundException(vehicleId, customerId));
+
+        try {
+            Path vehiclePhotoDir = uploadDirectory.resolve(vehicleId);
+            Path filePath = vehiclePhotoDir.resolve(fileName).normalize();
+
+            // Security check: ensure file is within allowed directory
+            if (!filePath.startsWith(vehiclePhotoDir)) {
+                throw new PhotoUploadException("Invalid file path");
+            }
+
+            Resource resource = new UrlResource(filePath.toUri());
+            if (resource.exists() && resource.isReadable()) {
+                return resource;
+            } else {
+                throw new PhotoUploadException("Photo file not found or not readable: " + fileName);
+            }
+        } catch (MalformedURLException e) {
+            throw new PhotoUploadException("Photo file not found: " + fileName, e);
+        }
+    }
+
+    @Override
+    public void deleteSinglePhoto(String photoId, String customerId) {
+        log.info("Deleting photo with ID: {}", photoId);
+
+        VehiclePhoto photo = photoRepository.findById(photoId)
+                .orElseThrow(() -> new PhotoUploadException("Photo not found with ID: " + photoId));
+
+        // Verify ownership
+        vehicleRepository.findByIdAndCustomerId(photo.getVehicleId(), customerId)
+                .orElseThrow(() -> new UnauthorizedVehicleAccessException(photo.getVehicleId(), customerId));
+
+        try {
+            // Delete physical file
+            Path filePath = Paths.get(photo.getFilePath());
+            Files.deleteIfExists(filePath);
+            log.info("Deleted photo file: {}", photo.getFileName());
+        } catch (IOException e) {
+            log.warn("Could not delete photo file: {}", photo.getFilePath(), e);
+        }
+
+        // Delete database record
+        photoRepository.delete(photo);
+        log.info("Deleted photo record with ID: {}", photoId);
     }
 
     @Override
