@@ -25,6 +25,12 @@ public interface VehicleService {
   List<Vehicle> getVehiclesForCustomer(String customerId);
 
   /**
+   * Retrieves all vehicles in the system (Admin/Employee only).
+   * @return A list of all vehicles.
+   */
+  List<Vehicle> getAllVehicles();
+
+  /**
    * Retrieves a single vehicle by its ID, ensuring it belongs to the specified customer.
    * @param id The ID of the vehicle.
    * @param customerId The ID of the owning customer.
