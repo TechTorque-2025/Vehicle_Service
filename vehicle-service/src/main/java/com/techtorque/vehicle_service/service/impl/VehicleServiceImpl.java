@@ -59,6 +59,13 @@ public class VehicleServiceImpl implements VehicleService {
 
   @Override
   @Transactional(readOnly = true)
+  public List<Vehicle> getAllVehicles() {
+    log.info("Fetching all vehicles in the system");
+    return vehicleRepository.findAll();
+  }
+
+  @Override
+  @Transactional(readOnly = true)
   public Optional<Vehicle> getVehicleByIdAndCustomer(String id, String customerId) {
     log.info("Fetching vehicle {} for customer: {}", id, customerId);
     return vehicleRepository.findByIdAndCustomerId(id, customerId);

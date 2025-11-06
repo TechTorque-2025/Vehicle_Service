@@ -72,20 +72,31 @@ public class VehicleController {
                   content = @Content(schema = @Schema(implementation = VehicleListResponseDto.class)))
   })
   @GetMapping
-  @PreAuthorize("hasRole('CUSTOMER')")
+  @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN', 'EMPLOYEE')")
   public ResponseEntity<List<VehicleListResponseDto>> listCustomerVehicles(
-          @RequestHeader("X-User-Subject") String customerId) {
+          @RequestHeader("X-User-Subject") String customerId,
+          @RequestHeader(value = "X-User-Roles", required = false) String userRoles) {
 
-    log.info("Listing vehicles for customer: {}", customerId);
+    log.info("Listing vehicles for user: {} with roles: {}", customerId, userRoles);
 
     try {
-      List<Vehicle> vehicles = vehicleService.getVehiclesForCustomer(customerId);
+      List<Vehicle> vehicles;
+      
+      // Admin and Employee can see all vehicles, Customer sees only their own
+      if (userRoles != null && (userRoles.contains("ADMIN") || userRoles.contains("EMPLOYEE"))) {
+        log.info("Admin/Employee access - fetching all vehicles");
+        vehicles = vehicleService.getAllVehicles();
+      } else {
+        log.info("Customer access - fetching vehicles for customerId: {}", customerId);
+        vehicles = vehicleService.getVehiclesForCustomer(customerId);
+      }
+      
       List<VehicleListResponseDto> response = VehicleMapper.toListResponseDtos(vehicles);
 
-      log.info("Successfully retrieved {} vehicles for customer: {}", vehicles.size(), customerId);
+      log.info("Successfully retrieved {} vehicles", vehicles.size());
       return ResponseEntity.ok(response);
     } catch (Exception e) {
-      log.error("Error listing vehicles for customer: {}", customerId, e);
+      log.error("Error listing vehicles for user: {}", customerId, e);
       throw e;
     }
   }
