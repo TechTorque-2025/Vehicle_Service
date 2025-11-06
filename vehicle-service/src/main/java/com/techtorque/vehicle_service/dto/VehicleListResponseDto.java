@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 public class VehicleListResponseDto {
 
     private String vehicleId;
+    private String customerId;
     private String make;
     private String model;
     private Integer year;
