@@ -1,5 +1,6 @@
 package com.techtorque.vehicle_service.dto;
 
+import com.techtorque.vehicle_service.validation.ValidVehicleYear;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,8 +22,7 @@ public class VehicleRequestDto {
     private String model;
 
     @NotNull(message = "Year is required")
-    @Min(value = 1900, message = "Year must be 1900 or later")
-    @Max(value = 2030, message = "Year cannot be beyond 2030")
+    @ValidVehicleYear
     private Integer year;
 
     @NotBlank(message = "VIN is required")
