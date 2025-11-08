@@ -1,9 +1,8 @@
 package com.techtorque.vehicle_service.service;
 
+import com.techtorque.vehicle_service.dto.VehicleRequestDto;
+import com.techtorque.vehicle_service.dto.VehicleUpdateDto;
 import com.techtorque.vehicle_service.entity.Vehicle;
-// DTOs will need to be created
-// import com.techtorque.vehicle_service.dto.VehicleRequestDto;
-// import com.techtorque.vehicle_service.dto.VehicleUpdateDto;
 
 import java.util.List;
 import java.util.Optional;
@@ -16,7 +15,7 @@ public interface VehicleService {
    * @param customerId The ID of the user who owns this vehicle.
    * @return The newly created Vehicle entity.
    */
-  Vehicle registerVehicle(/*VehicleRequestDto vehicleRequest,*/ String customerId);
+  Vehicle registerVehicle(VehicleRequestDto vehicleRequest, String customerId);
 
   /**
    * Retrieves all vehicles belonging to a specific customer.
@@ -24,6 +23,12 @@ public interface VehicleService {
    * @return A list of vehicles.
    */
   List<Vehicle> getVehiclesForCustomer(String customerId);
+
+  /**
+   * Retrieves all vehicles in the system (Admin/Employee only).
+   * @return A list of all vehicles.
+   */
+  List<Vehicle> getAllVehicles();
 
   /**
    * Retrieves a single vehicle by its ID, ensuring it belongs to the specified customer.
@@ -40,7 +45,7 @@ public interface VehicleService {
    * @param customerId The ID of the owning customer.
    * @return The updated Vehicle entity.
    */
-  Vehicle updateVehicle(String id, /*VehicleUpdateDto vehicleUpdate,*/ String customerId);
+  Vehicle updateVehicle(String id, VehicleUpdateDto vehicleUpdate, String customerId);
 
   /**
    * Deletes a vehicle after verifying ownership.

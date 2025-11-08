@@ -9,6 +9,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "vehicles")
@@ -19,7 +20,6 @@ import java.time.LocalDateTime;
 public class Vehicle {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.UUID)
   private String id;
 
   @Column(nullable = false, updatable = false)
@@ -51,4 +51,28 @@ public class Vehicle {
   @UpdateTimestamp // Automatically set the update time on every modification
   @Column(nullable = false)
   private LocalDateTime updatedAt;
+
+  /**
+   * Generates a vehicle ID before persisting if not already set
+   * Format: VEH-YYYY-MAKE-MODEL-####
+   * Example: VEH-2022-TOYOTA-CAMRY-0001
+   */
+  @PrePersist
+  public void generateId() {
+    if (this.id == null || this.id.isEmpty()) {
+      // Generate a sequential number (using UUID last 4 chars as pseudo-random)
+      String randomSuffix = UUID.randomUUID().toString().substring(0, 4).toUpperCase();
+      
+      // Clean make and model (remove spaces, convert to uppercase)
+      String cleanMake = this.make.replaceAll("[^A-Za-z0-9]", "").toUpperCase();
+      String cleanModel = this.model.replaceAll("[^A-Za-z0-9]", "").toUpperCase();
+      
+      // Format: VEH-YYYY-MAKE-MODEL-####
+      this.id = String.format("VEH-%d-%s-%s-%s", 
+          this.year, 
+          cleanMake, 
+          cleanModel, 
+          randomSuffix);
+    }
+  }
 }

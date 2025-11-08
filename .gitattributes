@@ -1,0 +1,24 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Java source files - use LF in repository, CRLF in working directory on Windows
+*.java text
+*.xml text
+*.properties text
+*.yml text
+*.yaml text
+*.md text
+
+# Scripts
+*.sh text eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# These files are binary and should be left untouched
+*.jar binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
