@@ -51,7 +51,7 @@ public class VehicleController {
           @ApiResponse(responseCode = "409", description = "Vehicle with this VIN already exists")
   })
   @PostMapping
-  @PreAuthorize("hasRole('CUSTOMER')")
+  @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN', 'SUPER_ADMIN')")
   public ResponseEntity<ApiResponseDto> registerNewVehicle(
           @Valid @RequestBody VehicleRequestDto vehicleRequest,
           @RequestHeader("X-User-Subject") String customerId) {
