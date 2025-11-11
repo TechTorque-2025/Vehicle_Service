@@ -42,6 +42,7 @@ public class VehicleMapper {
     public static VehicleListResponseDto toListResponseDto(Vehicle vehicle) {
         return VehicleListResponseDto.builder()
                 .vehicleId(vehicle.getId())
+                .customerId(vehicle.getCustomerId())
                 .make(vehicle.getMake())
                 .model(vehicle.getModel())
                 .year(vehicle.getYear())
