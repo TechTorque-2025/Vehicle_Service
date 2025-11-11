@@ -39,6 +39,13 @@ public interface VehicleService {
   Optional<Vehicle> getVehicleByIdAndCustomer(String id, String customerId);
 
   /**
+   * Retrieves a single vehicle by its ID (Admin/Employee access - no ownership check).
+   * @param id The ID of the vehicle.
+   * @return An Optional containing the vehicle if found.
+   */
+  Optional<Vehicle> getVehicleById(String id);
+
+  /**
    * Updates an existing vehicle's information.
    * @param id The ID of the vehicle to update.
    * @param vehicleUpdate The DTO with the fields to update.

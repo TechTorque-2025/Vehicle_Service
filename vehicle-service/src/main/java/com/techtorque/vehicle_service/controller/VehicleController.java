@@ -51,7 +51,7 @@ public class VehicleController {
           @ApiResponse(responseCode = "409", description = "Vehicle with this VIN already exists")
   })
   @PostMapping
-  @PreAuthorize("hasRole('CUSTOMER')")
+  @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN', 'SUPER_ADMIN')")
   public ResponseEntity<ApiResponseDto> registerNewVehicle(
           @Valid @RequestBody VehicleRequestDto vehicleRequest,
           @RequestHeader("X-User-Subject") String customerId) {
@@ -109,13 +109,22 @@ public class VehicleController {
           @ApiResponse(responseCode = "403", description = "Not authorized to access this vehicle")
   })
   @GetMapping("/{vehicleId}")
-  @PreAuthorize("hasRole('CUSTOMER')")
+  @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN', 'EMPLOYEE')")
   public ResponseEntity<VehicleResponseDto> getVehicleDetails(
           @PathVariable String vehicleId,
-          @RequestHeader("X-User-Subject") String customerId) {
+          @RequestHeader("X-User-Subject") String customerId,
+          @RequestHeader(value = "X-User-Roles", required = false) String userRoles) {
 
-    Vehicle vehicle = vehicleService.getVehicleByIdAndCustomer(vehicleId, customerId)
-            .orElseThrow(() -> new com.techtorque.vehicle_service.exception.VehicleNotFoundException(vehicleId, customerId));
+    Vehicle vehicle;
+
+    // Admin and Employee can see any vehicle, Customer sees only their own
+    if (userRoles != null && (userRoles.contains("ADMIN") || userRoles.contains("EMPLOYEE"))) {
+      vehicle = vehicleService.getVehicleById(vehicleId)
+              .orElseThrow(() -> new com.techtorque.vehicle_service.exception.VehicleNotFoundException(vehicleId, customerId));
+    } else {
+      vehicle = vehicleService.getVehicleByIdAndCustomer(vehicleId, customerId)
+              .orElseThrow(() -> new com.techtorque.vehicle_service.exception.VehicleNotFoundException(vehicleId, customerId));
+    }
 
     VehicleResponseDto response = VehicleMapper.toResponseDto(vehicle);
 
@@ -130,13 +139,21 @@ public class VehicleController {
           @ApiResponse(responseCode = "403", description = "Not authorized to update this vehicle")
   })
   @PutMapping("/{vehicleId}")
-  @PreAuthorize("hasRole('CUSTOMER')")
+  @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN', 'EMPLOYEE')")
   public ResponseEntity<ApiResponseDto> updateVehicleInfo(
           @PathVariable String vehicleId,
           @Valid @RequestBody VehicleUpdateDto vehicleUpdate,
-          @RequestHeader("X-User-Subject") String customerId) {
+          @RequestHeader("X-User-Subject") String customerId,
+          @RequestHeader(value = "X-User-Roles", required = false) String userRoles) {
 
-    vehicleService.updateVehicle(vehicleId, vehicleUpdate, customerId);
+    // For Admin/Employee, allow updating any vehicle (pass empty string to bypass customer check)
+    // For Customer, verify ownership
+    if (userRoles != null && (userRoles.contains("ADMIN") || userRoles.contains("EMPLOYEE"))) {
+      // Admin/Employee can update any vehicle - need to modify service method
+      vehicleService.updateVehicle(vehicleId, vehicleUpdate, null);
+    } else {
+      vehicleService.updateVehicle(vehicleId, vehicleUpdate, customerId);
+    }
 
     ApiResponseDto response = ApiResponseDto.builder()
             .message("Vehicle updated")
@@ -154,12 +171,18 @@ public class VehicleController {
           @ApiResponse(responseCode = "403", description = "Not authorized to delete this vehicle")
   })
   @DeleteMapping("/{vehicleId}")
-  @PreAuthorize("hasRole('CUSTOMER')")
+  @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN', 'EMPLOYEE')")
   public ResponseEntity<ApiResponseDto> removeVehicle(
           @PathVariable String vehicleId,
-          @RequestHeader("X-User-Subject") String customerId) {
+          @RequestHeader("X-User-Subject") String customerId,
+          @RequestHeader(value = "X-User-Roles", required = false) String userRoles) {
 
-    vehicleService.deleteVehicle(vehicleId, customerId);
+    // Admin/Employee can delete any vehicle, Customer can only delete their own
+    if (userRoles != null && (userRoles.contains("ADMIN") || userRoles.contains("EMPLOYEE"))) {
+      vehicleService.deleteVehicle(vehicleId, null);
+    } else {
+      vehicleService.deleteVehicle(vehicleId, customerId);
+    }
 
     // Also delete associated photos
     photoStorageService.deleteVehiclePhotos(vehicleId);
@@ -198,12 +221,20 @@ public class VehicleController {
           @ApiResponse(responseCode = "404", description = "Vehicle not found")
   })
   @GetMapping("/{vehicleId}/history")
-  @PreAuthorize("hasRole('CUSTOMER')")
+  @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN', 'EMPLOYEE')")
   public ResponseEntity<List<ServiceHistoryDto>> getServiceHistory(
           @PathVariable String vehicleId,
-          @RequestHeader("X-User-Subject") String customerId) {
+          @RequestHeader("X-User-Subject") String customerId,
+          @RequestHeader(value = "X-User-Roles", required = false) String userRoles) {
 
-    List<ServiceHistoryDto> history = serviceHistoryService.getServiceHistory(vehicleId, customerId);
+    // Admin and Employee can see any vehicle's history, Customer sees only their own
+    List<ServiceHistoryDto> history;
+    if (userRoles != null && (userRoles.contains("ADMIN") || userRoles.contains("EMPLOYEE"))) {
+      // For Admin/Employee, pass null as customerId to skip ownership check
+      history = serviceHistoryService.getServiceHistory(vehicleId, null);
+    } else {
+      history = serviceHistoryService.getServiceHistory(vehicleId, customerId);
+    }
 
     return ResponseEntity.ok(history);
   }

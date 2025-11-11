@@ -72,12 +72,27 @@ public class VehicleServiceImpl implements VehicleService {
   }
 
   @Override
-  public Vehicle updateVehicle(String id, VehicleUpdateDto vehicleUpdate, String customerId) {
-    log.info("Updating vehicle {} for customer: {}", id, customerId);
+  @Transactional(readOnly = true)
+  public Optional<Vehicle> getVehicleById(String id) {
+    log.info("Fetching vehicle {} (Admin/Employee access)", id);
+    return vehicleRepository.findById(id);
+  }
 
-    // Find the existing vehicle and verify ownership
-    Vehicle existingVehicle = vehicleRepository.findByIdAndCustomerId(id, customerId)
-            .orElseThrow(() -> new VehicleNotFoundException(id, customerId));
+  @Override
+  public Vehicle updateVehicle(String id, VehicleUpdateDto vehicleUpdate, String customerId) {
+    Vehicle existingVehicle;
+
+    // If customerId is null, it's an Admin/Employee request - no ownership check
+    if (customerId == null) {
+      log.info("Updating vehicle {} (Admin/Employee access)", id);
+      existingVehicle = vehicleRepository.findById(id)
+              .orElseThrow(() -> new VehicleNotFoundException(id, "admin"));
+    } else {
+      log.info("Updating vehicle {} for customer: {}", id, customerId);
+      // Find the existing vehicle and verify ownership
+      existingVehicle = vehicleRepository.findByIdAndCustomerId(id, customerId)
+              .orElseThrow(() -> new VehicleNotFoundException(id, customerId));
+    }
 
     // Update fields if provided in the DTO
     if (vehicleUpdate.getColor() != null) {
@@ -101,11 +116,19 @@ public class VehicleServiceImpl implements VehicleService {
 
   @Override
   public void deleteVehicle(String id, String customerId) {
-    log.info("Deleting vehicle {} for customer: {}", id, customerId);
+    Vehicle existingVehicle;
 
-    // Find the existing vehicle and verify ownership
-    Vehicle existingVehicle = vehicleRepository.findByIdAndCustomerId(id, customerId)
-            .orElseThrow(() -> new VehicleNotFoundException(id, customerId));
+    // If customerId is null, it's an Admin/Employee request - no ownership check
+    if (customerId == null) {
+      log.info("Deleting vehicle {} (Admin/Employee access)", id);
+      existingVehicle = vehicleRepository.findById(id)
+              .orElseThrow(() -> new VehicleNotFoundException(id, "admin"));
+    } else {
+      log.info("Deleting vehicle {} for customer: {}", id, customerId);
+      // Find the existing vehicle and verify ownership
+      existingVehicle = vehicleRepository.findByIdAndCustomerId(id, customerId)
+              .orElseThrow(() -> new VehicleNotFoundException(id, customerId));
+    }
 
     // Delete the vehicle
     vehicleRepository.delete(existingVehicle);
