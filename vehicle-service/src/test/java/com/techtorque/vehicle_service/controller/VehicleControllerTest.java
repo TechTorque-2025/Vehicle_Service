@@ -231,9 +231,10 @@ class VehicleControllerTest {
     @WithMockUser(roles = { "CUSTOMER" })
     void testGetServiceHistory_Success() throws Exception {
         ServiceHistoryDto historyItem = ServiceHistoryDto.builder()
-                .serviceType("Oil Change")
-                .mileage(15000)
-                .serviceDate(java.time.LocalDateTime.now())
+                .type("Oil Change")
+                .cost(new java.math.BigDecimal("50.00"))
+                .date(java.time.LocalDateTime.now())
+                .description("Regular oil change service")
                 .build();
 
         List<ServiceHistoryDto> history = Arrays.asList(historyItem);
