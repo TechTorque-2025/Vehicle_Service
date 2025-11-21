@@ -3,6 +3,7 @@ package com.techtorque.vehicle_service.service;
 import com.techtorque.vehicle_service.dto.VehicleRequestDto;
 import com.techtorque.vehicle_service.dto.VehicleUpdateDto;
 import com.techtorque.vehicle_service.entity.Vehicle;
+import com.techtorque.vehicle_service.exception.VehicleNotFoundException;
 import com.techtorque.vehicle_service.repository.VehiclePhotoRepository;
 import com.techtorque.vehicle_service.repository.VehicleRepository;
 import com.techtorque.vehicle_service.service.impl.VehicleServiceImpl;
@@ -13,7 +14,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import jakarta.persistence.EntityNotFoundException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -193,7 +193,7 @@ class VehicleServiceTest {
                 .thenReturn(Optional.empty());
 
         // When & Then
-        assertThrows(EntityNotFoundException.class,
+        assertThrows(VehicleNotFoundException.class,
                 () -> vehicleService.updateVehicle("VEH-123", updateDto, "CUST-123"));
 
         verify(vehicleRepository).findByIdAndCustomerId("VEH-123", "CUST-123");
