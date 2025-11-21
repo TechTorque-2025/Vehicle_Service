@@ -163,7 +163,14 @@ class VehicleControllerTest {
     @Test
     @WithMockUser(roles = { "CUSTOMER" })
     void testUpdateVehicleInfo_Success() throws Exception {
-        Vehicle updatedVehicle = testVehicle.toBuilder()
+        Vehicle updatedVehicle = Vehicle.builder()
+                .id(testVehicle.getId())
+                .customerId(testVehicle.getCustomerId())
+                .make(testVehicle.getMake())
+                .model(testVehicle.getModel())
+                .year(testVehicle.getYear())
+                .vin(testVehicle.getVin())
+                .licensePlate(testVehicle.getLicensePlate())
                 .mileage(20000)
                 .color("Blue")
                 .build();
