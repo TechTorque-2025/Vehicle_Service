@@ -139,8 +139,8 @@ class VehiclePhotoRepositoryTest {
 
         // Then
         assertNotNull(saved.getId());
-        assertNotNull(saved.getCreatedAt());
+        assertNotNull(saved.getUploadedAt());
         assertEquals("test.jpg", saved.getFileName());
-        assertEquals(vehicle.getId(), saved.getVehicle().getId());
+        assertEquals("VEH-SAVE-123", saved.getVehicleId());
     }
 }
