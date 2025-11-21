@@ -111,7 +111,7 @@ class VehicleControllerTest {
                 .header("X-User-Roles", "CUSTOMER"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].id").value("VEH-123"));
+                .andExpect(jsonPath("$[0].vehicleId").value("VEH-123"));
 
         verify(vehicleService).getVehiclesForCustomer("CUST-123");
     }
@@ -140,7 +140,7 @@ class VehicleControllerTest {
                 .header("X-User-Subject", "CUST-123")
                 .header("X-User-Roles", "CUSTOMER"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value("VEH-123"))
+                .andExpect(jsonPath("$.vehicleId").value("VEH-123"))
                 .andExpect(jsonPath("$.make").value("Toyota"));
 
         verify(vehicleService).getVehicleByIdAndCustomer("VEH-123", "CUST-123");
@@ -289,7 +289,7 @@ class VehicleControllerTest {
                 .header("X-User-Subject", "ADMIN-123")
                 .header("X-User-Roles", "ADMIN"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value("VEH-123"));
+                .andExpect(jsonPath("$.vehicleId").value("VEH-123"));
 
         verify(vehicleService).getVehicleById("VEH-123");
     }
