@@ -31,7 +31,7 @@ public class Vehicle {
   @Column(nullable = false)
   private String model;
 
-  @Column(nullable = false, name = "model_year")
+  @Column(nullable = false)
   private int year;
 
   @Column(unique = true, nullable = false)
