@@ -127,7 +127,9 @@ class VehicleRepositoryTest {
         entityManager.persistAndFlush(vehicle);
 
         // When
-        vehicleRepository.deleteByIdAndCustomerId("VEH-DELETE-123", "CUST-123");
+        Optional<Vehicle> vehicleToDelete = vehicleRepository.findByIdAndCustomerId("VEH-DELETE-123", "CUST-123");
+        assertTrue(vehicleToDelete.isPresent());
+        vehicleRepository.delete(vehicleToDelete.get());
         entityManager.flush();
 
         // Then
