@@ -36,21 +36,21 @@ class VehiclePhotoRepositoryTest {
                 .build();
 
         VehiclePhoto photo1 = VehiclePhoto.builder()
-                .vehicle(vehicle)
+                .vehicleId("VEH-123")
                 .fileName("front.jpg")
-                .originalFileName("front_view.jpg")
-                .contentType("image/jpeg")
-                .size(1024L)
                 .filePath("/uploads/VEH-123/front.jpg")
+                .fileUrl("http://localhost/uploads/VEH-123/front.jpg")
+                .contentType("image/jpeg")
+                .fileSize(1024L)
                 .build();
 
         VehiclePhoto photo2 = VehiclePhoto.builder()
-                .vehicle(vehicle)
+                .vehicleId("VEH-123")
                 .fileName("back.jpg")
-                .originalFileName("back_view.jpg")
-                .contentType("image/jpeg")
-                .size(2048L)
                 .filePath("/uploads/VEH-123/back.jpg")
+                .fileUrl("http://localhost/uploads/VEH-123/back.jpg")
+                .contentType("image/jpeg")
+                .fileSize(2048L)
                 .build();
 
         entityManager.persistAndFlush(vehicle);
