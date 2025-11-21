@@ -99,6 +99,7 @@ class VehicleRepositoryTest {
                 .build();
 
         // When
+        vehicle.generateId(); // Manually trigger ID generation for test
         Vehicle saved = vehicleRepository.save(vehicle);
 
         // Then
