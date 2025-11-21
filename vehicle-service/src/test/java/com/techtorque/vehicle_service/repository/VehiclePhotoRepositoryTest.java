@@ -124,12 +124,12 @@ class VehiclePhotoRepositoryTest {
                 .build();
 
         VehiclePhoto photo = VehiclePhoto.builder()
-                .vehicle(vehicle)
+                .vehicleId("VEH-SAVE-123")
                 .fileName("test.jpg")
-                .originalFileName("test_original.jpg")
-                .contentType("image/jpeg")
-                .size(3072L)
                 .filePath("/uploads/VEH-SAVE-123/test.jpg")
+                .fileUrl("http://localhost/uploads/VEH-SAVE-123/test.jpg")
+                .contentType("image/jpeg")
+                .fileSize(1024L)
                 .build();
 
         entityManager.persistAndFlush(vehicle);
