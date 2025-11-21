@@ -160,7 +160,14 @@ class VehicleServiceTest {
     @Test
     void testUpdateVehicle_Success() {
         // Given
-        Vehicle updatedVehicle = existingVehicle.toBuilder()
+        Vehicle updatedVehicle = Vehicle.builder()
+                .id(existingVehicle.getId())
+                .customerId(existingVehicle.getCustomerId())
+                .make(existingVehicle.getMake())
+                .model(existingVehicle.getModel())
+                .year(existingVehicle.getYear())
+                .vin(existingVehicle.getVin())
+                .licensePlate(existingVehicle.getLicensePlate())
                 .mileage(20000)
                 .color("Blue")
                 .build();
@@ -204,8 +211,7 @@ class VehicleServiceTest {
 
         // Then
         verify(vehicleRepository).findByIdAndCustomerId("VEH-123", "CUST-123");
-        verify(vehiclePhotoRepository).deleteByVehicleId("VEH-123");
-        verify(vehicleRepository).deleteByIdAndCustomerId("VEH-123", "CUST-123");
+        verify(vehicleRepository).delete(existingVehicle);
     }
 
     @Test
@@ -215,11 +221,11 @@ class VehicleServiceTest {
                 .thenReturn(Optional.empty());
 
         // When & Then
-        assertThrows(EntityNotFoundException.class,
+        assertThrows(VehicleNotFoundException.class,
                 () -> vehicleService.deleteVehicle("VEH-123", "CUST-123"));
 
         verify(vehicleRepository).findByIdAndCustomerId("VEH-123", "CUST-123");
-        verify(vehiclePhotoRepository, never()).deleteByVehicleId(any());
-        verify(vehicleRepository, never()).deleteByIdAndCustomerId(any(), any());
+        verify(vehicleRepository, never()).delete(any(Vehicle.class));
+    }
     }
 }
