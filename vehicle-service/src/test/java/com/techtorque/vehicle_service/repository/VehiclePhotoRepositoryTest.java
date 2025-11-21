@@ -142,5 +142,8 @@ class VehiclePhotoRepositoryTest {
         assertNotNull(saved.getUploadedAt());
         assertEquals("test.jpg", saved.getFileName());
         assertEquals("VEH-SAVE-123", saved.getVehicleId());
+
+        // Verify the ID was generated
+        assertTrue(saved.getId().length() > 0);
     }
 }
