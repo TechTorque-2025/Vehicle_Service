@@ -1,9 +1,9 @@
 package com.techtorque.vehicle_service.service.impl;
 
-import com.techtorque.vehicle_service.dto.request.VehicleRequestDto;
-import com.techtorque.vehicle_service.dto.request.VehicleUpdateDto;
-import com.techtorque.vehicle_service.dto.response.VehicleListResponseDto;
-import com.techtorque.vehicle_service.dto.response.VehicleResponseDto;
+import com.techtorque.vehicle_service.dto.VehicleRequestDto;
+import com.techtorque.vehicle_service.dto.VehicleUpdateDto;
+import com.techtorque.vehicle_service.dto.VehicleListResponseDto;
+import com.techtorque.vehicle_service.dto.VehicleResponseDto;
 import com.techtorque.vehicle_service.entity.Vehicle;
 import com.techtorque.vehicle_service.exception.DuplicateVinException;
 import com.techtorque.vehicle_service.exception.UnauthorizedVehicleAccessException;

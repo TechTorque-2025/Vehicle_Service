@@ -1,6 +1,6 @@
 package com.techtorque.vehicle_service.service.impl;
 
-import com.techtorque.vehicle_service.dto.response.PhotoUploadResponseDto;
+import com.techtorque.vehicle_service.dto.PhotoUploadResponseDto;
 import com.techtorque.vehicle_service.entity.VehiclePhoto;
 import com.techtorque.vehicle_service.exception.PhotoUploadException;
 import com.techtorque.vehicle_service.repository.VehiclePhotoRepository;
