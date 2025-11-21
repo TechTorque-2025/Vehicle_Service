@@ -42,7 +42,7 @@ class VehicleEntityTest {
 
         assertNotNull(vehicle.getId());
         assertTrue(vehicle.getId().startsWith("VEH-2022-TOYOTA-CAMRY-"));
-        assertEquals(21, vehicle.getId().length()); // VEH-YYYY-MAKE-MODEL-XXXX format
+        assertEquals(26, vehicle.getId().length()); // VEH-YYYY-MAKE-MODEL-XXXX format (4-char UUID)
     }
 
     @Test

@@ -254,7 +254,7 @@ class VehicleControllerTest {
                 .header("X-User-Roles", "CUSTOMER"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].serviceType").value("Oil Change"));
+                .andExpect(jsonPath("$[0].type").value("Oil Change"));
 
         verify(serviceHistoryService).getServiceHistory("VEH-123", "CUST-123");
     }
