@@ -31,7 +31,7 @@ public class Vehicle {
   @Column(nullable = false)
   private String model;
 
-  @Column(nullable = false)
+  @Column(nullable = false, name = "model_year")
   private int year;
 
   @Column(unique = true, nullable = false)
@@ -62,16 +62,16 @@ public class Vehicle {
     if (this.id == null || this.id.isEmpty()) {
       // Generate a sequential number (using UUID last 4 chars as pseudo-random)
       String randomSuffix = UUID.randomUUID().toString().substring(0, 4).toUpperCase();
-      
+
       // Clean make and model (remove spaces, convert to uppercase)
       String cleanMake = this.make.replaceAll("[^A-Za-z0-9]", "").toUpperCase();
       String cleanModel = this.model.replaceAll("[^A-Za-z0-9]", "").toUpperCase();
-      
+
       // Format: VEH-YYYY-MAKE-MODEL-####
-      this.id = String.format("VEH-%d-%s-%s-%s", 
-          this.year, 
-          cleanMake, 
-          cleanModel, 
+      this.id = String.format("VEH-%d-%s-%s-%s",
+          this.year,
+          cleanMake,
+          cleanModel,
           randomSuffix);
     }
   }
