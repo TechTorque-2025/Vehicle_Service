@@ -80,21 +80,21 @@ class VehiclePhotoRepositoryTest {
                 .build();
 
         VehiclePhoto photo1 = VehiclePhoto.builder()
-                .vehicle(vehicle)
+                .vehicleId("VEH-DELETE-123")
                 .fileName("photo1.jpg")
-                .originalFileName("original1.jpg")
-                .contentType("image/jpeg")
-                .size(1024L)
                 .filePath("/uploads/VEH-DELETE-123/photo1.jpg")
+                .fileUrl("http://localhost/uploads/VEH-DELETE-123/photo1.jpg")
+                .contentType("image/jpeg")
+                .fileSize(1024L)
                 .build();
 
         VehiclePhoto photo2 = VehiclePhoto.builder()
-                .vehicle(vehicle)
+                .vehicleId("VEH-DELETE-123")
                 .fileName("photo2.jpg")
-                .originalFileName("original2.jpg")
-                .contentType("image/jpeg")
-                .size(2048L)
                 .filePath("/uploads/VEH-DELETE-123/photo2.jpg")
+                .fileUrl("http://localhost/uploads/VEH-DELETE-123/photo2.jpg")
+                .contentType("image/jpeg")
+                .fileSize(2048L)
                 .build();
 
         entityManager.persistAndFlush(vehicle);
