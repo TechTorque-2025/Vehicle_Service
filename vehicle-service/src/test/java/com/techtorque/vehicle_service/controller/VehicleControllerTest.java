@@ -214,11 +214,12 @@ class VehicleControllerTest {
     void testGetVehiclePhotoList_Success() throws Exception {
         VehiclePhoto photo = VehiclePhoto.builder()
                 .id("PHOTO-123")
-                .vehicle(testVehicle)
+                .vehicleId("VEH-123")
                 .fileName("front.jpg")
-                .originalFileName("front_view.jpg")
+                .filePath("/uploads/VEH-123/front.jpg")
+                .fileUrl("http://localhost/uploads/VEH-123/front.jpg")
                 .contentType("image/jpeg")
-                .size(1024L)
+                .fileSize(1024L)
                 .build();
 
         List<VehiclePhoto> photos = Arrays.asList(photo);
